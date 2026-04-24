@@ -1,4 +1,9 @@
-#include <bits/stdc++.h>
+// Avoid non-standard headers for broader compatibility
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <functional>
+#include <utility>
 using namespace std;
 
 // Build tree from extended preorder where -1 indicates null.
@@ -53,4 +58,3 @@ int main() {
 
     return 0;
 }
-
