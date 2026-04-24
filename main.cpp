@@ -1,7 +1,7 @@
 // Portable C++11 implementation without non-standard headers
 #include <iostream>
 #include <vector>
-#include <cstring>
+#include <utility>
 using namespace std;
 
 // Build tree from extended preorder where -1 indicates null.
