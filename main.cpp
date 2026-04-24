@@ -1,9 +1,7 @@
-// Avoid non-standard headers for broader compatibility
+// Portable C++11 implementation without non-standard headers
 #include <iostream>
 #include <vector>
-#include <unordered_map>
-#include <functional>
-#include <utility>
+#include <cstring>
 using namespace std;
 
 // Build tree from extended preorder where -1 indicates null.
@@ -23,37 +21,44 @@ int main() {
     int x;
     while (cin >> x) pre.push_back(x);
 
-    // Build using an index passed by reference via lambda
-    unordered_map<int,int> parent; // value -> parent value (0 if root)
-    unordered_map<int,int> depth;  // value -> depth
-    parent.reserve(1024);
-    depth.reserve(1024);
+    // Use fixed-size arrays for parent/depth since 1..1000
+    const int MAXV = 1005;
+    static int parent[MAXV];
+    static int depth[MAXV];
+    for (int i = 0; i < MAXV; ++i) { parent[i] = -1; depth[i] = -1; }
 
-    function<void(int,int,int&,int)> build = [&](int par, int dep, int& idx, int n){
-        if (idx >= n) return; // safety
-        int val = pre[idx++];
-        if (val == -1) return; // null
-        parent[val] = par;
-        depth[val] = dep;
-        // left
-        build(val, dep+1, idx, n);
-        // right
-        build(val, dep+1, idx, n);
+    // Recursive builder
+    struct Builder {
+        const vector<int>& pre;
+        int n;
+        int idx;
+        int* parent;
+        int* depth;
+        Builder(const vector<int>& pre_, int* p_, int* d_) : pre(pre_), n((int)pre_.size()), idx(0), parent(p_), depth(d_) {}
+        void build(int par, int dep) {
+            if (idx >= n) return;
+            int val = pre[idx++];
+            if (val == -1) return;
+            parent[val] = par;
+            depth[val] = dep;
+            build(val, dep+1);
+            build(val, dep+1);
+        }
     };
 
-    int idx = 0;
-    build(0, 0, idx, (int)pre.size());
+    Builder B(pre, parent, depth);
+    B.build(-1, 0);
 
     for (auto &qr : queries) {
         int a = qr.first, b = qr.second;
-        auto ita = depth.find(a), itb = depth.find(b);
-        if (ita == depth.end() || itb == depth.end()) {
+        // If a or b not present in tree
+        if (a <= 0 || a >= MAXV || b <= 0 || b >= MAXV || depth[a] == -1 || depth[b] == -1) {
             cout << 0 << '\n';
             continue;
         }
-        int da = ita->second, db = itb->second;
+        int da = depth[a], db = depth[b];
         int pa = parent[a], pb = parent[b];
-        cout << ((da == db && pa != 0 && pb != 0 && pa != pb) ? 1 : 0) << '\n';
+        cout << ((da == db && pa != -1 && pb != -1 && pa != pb) ? 1 : 0) << '\n';
     }
 
     return 0;
